@@ -30,68 +30,15 @@
 						"header": [],
 						"body": {
 							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "email",
-									"value": "admin@gmail.com",
-									"type": "text"
-								},
-								{
-									"key": "password",
-									"value": "admin",
-									"type": "text"
-								},
-								{
-									"key": "email",
-									"value": "user1@gmail.com",
-									"type": "text",
-									"disabled": true
-								},
-								{
-									"key": "password",
-									"value": "Pa$$word",
-									"type": "text",
-									"disabled": true
-								}
-							]
+							"urlencoded": []
 						},
 						"url": {
-							"raw": "{{host}}/auth?email=user3@gmail.com&password=Pa$$word1",
+							"raw": "{{host}}/auth",
 							"host": [
 								"{{host}}"
 							],
 							"path": [
 								"auth"
-							],
-							"query": [
-								{
-									"key": "email",
-									"value": "user1@gmail.com",
-									"disabled": true
-								},
-								{
-									"key": "password",
-									"value": "Pa$$word",
-									"disabled": true
-								},
-								{
-									"key": "email",
-									"value": "admin@gmail.com",
-									"disabled": true
-								},
-								{
-									"key": "password",
-									"value": "admin",
-									"disabled": true
-								},
-								{
-									"key": "email",
-									"value": "user3@gmail.com"
-								},
-								{
-									"key": "password",
-									"value": "Pa$$word1"
-								}
 							]
 						}
 					},
@@ -211,13 +158,7 @@
 						"header": [],
 						"body": {
 							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "password",
-									"value": "",
-									"type": "text"
-								}
-							]
+							"urlencoded": []
 						},
 						"url": {
 							"raw": "{{host}}/auth/recovery",
@@ -240,16 +181,53 @@
 				{
 					"name": "create",
 					"request": {
-						"method": "GET",
-						"header": []
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/users",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users"
+							]
+						}
 					},
 					"response": []
 				},
 				{
 					"name": "getAllUsers",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": "{{host}}/users",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users"
+							]
+						}
 					},
 					"response": []
 				},
@@ -512,7 +490,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"region\": \"Львівська\",\r\n    \"city\": \"Львів\",\r\n    \"car\": {\r\n        \"car_brand\": \"Audi\",\r\n        \"car_model\": \"A6\",\r\n        \"car_price\": 25000,\r\n        \"car_year\": 2015\r\n    }\r\n}",
+							"raw": "",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -559,7 +537,7 @@
 							"variable": [
 								{
 									"key": "id",
-									"value": "13"
+									"value": ""
 								}
 							]
 						}
@@ -597,7 +575,7 @@
 							"variable": [
 								{
 									"key": "id",
-									"value": "15"
+									"value": ""
 								}
 							]
 						}
@@ -621,7 +599,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"region\": \"Львівська\",\r\n    \"city\": \"ФФФФФФФФФФФФФФФ\",\r\n    \"car\": {\r\n        \"car_brand\": \"XXX\",\r\n        \"car_model\": \"A6\",\r\n        \"car_price\": 25000,\r\n        \"car_year\": 2015\r\n    }\r\n}",
+							"raw": "",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -640,7 +618,7 @@
 							"variable": [
 								{
 									"key": "id",
-									"value": "17"
+									"value": "2"
 								}
 							]
 						}
@@ -761,7 +739,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    Немає Audi\r\n}",
+							"raw": "{\r\n    \"text\": \"\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"

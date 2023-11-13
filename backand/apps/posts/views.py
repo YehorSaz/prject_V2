@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AnonymousUser
 from django.utils.decorators import method_decorator
 
 from rest_framework import status
@@ -15,7 +16,7 @@ from core.services.email_service import EmailService
 from apps.cars.models import CarModel
 from apps.cars.serializers import CarSerializers
 from apps.posts.models import UserPostsModel
-from apps.posts.serializers import UserPostSerializer
+from apps.posts.serializers import UserPostSerializer, UserPostSerializerForBase
 from apps.users.models import UserModel
 
 
@@ -24,7 +25,7 @@ class UserPostListView(ListAPIView):
     """
         Get all posts
     """
-    serializer_class = UserPostSerializer
+    # serializer_class = UserPostSerializer
     pagination_class = PagePagination
     permission_classes = (AllowAny,)
 
@@ -34,6 +35,14 @@ class UserPostListView(ListAPIView):
         else:
             queryset = UserPostsModel.objects.filter(active_status=True)
         return queryset
+
+    def get_serializer(self, *args, **kwargs):
+        if str(self.request.user) == 'AnonymousUser' or self.request.user.account_status == 'base':
+            serializer_class = UserPostSerializerForBase
+        else:
+            serializer_class = UserPostSerializer
+        kwargs.setdefault('context', self.get_serializer_context())
+        return serializer_class(*args, **kwargs)
 
 
 class UserAddPostView(GenericAPIView):
@@ -86,8 +95,8 @@ class PostRetriveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     patch:
         Partial update post by id
     """
-    serializer_class = UserPostSerializer
     permission_classes = [IsAdminUser | IsOwner]
+    serializer_class = UserPostSerializer
 
     def get_queryset(self):
         if self.request.user.is_staff:
@@ -100,7 +109,10 @@ class PostRetriveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
         post = self.get_object()
         post.views_count += 1
         post.save()
-        serializer = UserPostSerializer(post)
+        if self.request.user.account_status == 'base':
+            serializer = UserPostSerializerForBase(post)
+        else:
+            serializer = UserPostSerializer(post)
         return Response(serializer.data, status.HTTP_200_OK)
 
     def delete(self, *args, **kwargs):
@@ -131,7 +143,7 @@ class PostRetriveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
         if post.update_count >= 3:
             EmailService.email_to_admin(post.id)
             return Response('only 3 times', status.HTTP_403_FORBIDDEN)
-        post.update_count += 1
+
         post.save()
         censor_count = censor(self.request.data['city'])
         if censor_count == 0:
@@ -139,6 +151,7 @@ class PostRetriveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
             post.save()
         else:
             post.active_status = False
+            post.update_count += 1
             post.save()
             return Response('Знайдено підозрілу лексику, відредагуйте оголошення, оголошення не активне',
                             status.HTTP_201_CREATED)

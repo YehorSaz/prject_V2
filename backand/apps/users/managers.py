@@ -17,6 +17,7 @@ class UserManager(BaseUserManager):
         extra_kwargs.setdefault('is_staff', True)
         extra_kwargs.setdefault('is_superuser', True)
         extra_kwargs.setdefault('is_active', True)
+        extra_kwargs.setdefault('account_status', 'premium')
 
         if not extra_kwargs['is_staff']:
             raise ValueError('Superuser must have is_staff')
