@@ -5,7 +5,7 @@ services:
     build:
       context: .
     volumes:
-      - ./backand:/app
+
     env_file:
       - .env
     restart: on-failure
@@ -16,7 +16,6 @@ services:
   db:
     image: mysql:8
     volumes:
-      - ./mysql:/var/lib/mysql
     ports:
       - "5555:3306"
     env_file:
@@ -28,7 +27,4 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./frontend:/usr/share/nginx/html
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./backand/static:/usr/share/nginx/doc
 
