@@ -2,6 +2,8 @@ from django.db.transaction import atomic
 
 from rest_framework import serializers
 
+from core.services.currencies_service import CurrenciesService
+
 from apps.cars.models import CarModel
 from apps.cars.serializers import CarSerializers, CarSerializersForBase
 from apps.posts.models import UserPostsModel
@@ -13,17 +15,16 @@ class UserPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserPostsModel
         fields = (
-        'id', 'active_status', 'user', 'region', 'city', 'views_count', 'update_count', 'created_at', 'updated_at',
-        'car')
+            'id', 'active_status', 'user', 'region', 'city', 'views_count', 'update_count', 'created_at', 'updated_at',
+            'car')
         read_only_fields = ('id', 'status', 'views_count', 'update_count', 'created_at', 'updated_at', 'user')
-
-
-
 
     @atomic
     def create(self, validated_data: dict):
         car = validated_data.pop('car')
         car = CarModel.objects.create(**car)
+        car_id = car.id
+        car = CurrenciesService.update_price_by_id(car_id)
         post = UserPostsModel.objects.create(car=car, **validated_data)
         return post
 
@@ -38,6 +39,7 @@ class UserPostSerializer(serializers.ModelSerializer):
         instance.updated_at = validated_data.get("updated_at", instance.updated_at)
         instance.save()
         return instance
+
 
 class UserPostSerializerForBase(serializers.ModelSerializer):
     car = CarSerializersForBase()

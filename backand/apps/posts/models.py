@@ -9,6 +9,16 @@ from apps.posts.choices.region_choices import RegionChoices
 from apps.users.models import UserModel
 
 
+class VisitModel(models.Model):
+    class Meta:
+        db_table = 'visits'
+        ordering = ['id']
+
+    endpoint = models.CharField(max_length=255)
+    count = models.IntegerField(default=0)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+
 class UserPostsModel(BaseModel):
     class Meta:
         db_table = 'posts'
@@ -24,4 +34,3 @@ class UserPostsModel(BaseModel):
 
     car = models.OneToOneField(CarModel, on_delete=models.CASCADE, related_name='post')
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='posts')
-

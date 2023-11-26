@@ -14,6 +14,7 @@ from apps.users.serializers import UserSerializer
 
 UserModel = get_user_model()
 
+
 @method_decorator(name='post', decorator=swagger_auto_schema(security=[]))
 class UserListCreateView(ListCreateAPIView):
     serializer_class = UserSerializer
@@ -21,6 +22,23 @@ class UserListCreateView(ListCreateAPIView):
 
     def get_queryset(self):
         return UserModel.objects.exclude(pk=self.request.user.pk)
+
+
+class DeleteUserView(GenericAPIView):
+    """
+        Delete User by id
+    """
+
+    queryset = UserModel.objects.all()
+    permission_classes = (IsSuperUser, IsAdminUser)
+
+    def get_serializer(self, *args, **kwargs):
+        pass
+
+    def delete(self, *args, **kwargs):
+        user = self.get_object()
+        user.delete()
+        return Response('The User was deleted', status.HTTP_200_OK)
 
 
 class UserToAdminView(GenericAPIView):

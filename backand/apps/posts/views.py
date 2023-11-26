@@ -1,8 +1,11 @@
-from django.contrib.auth.models import AnonymousUser
+from datetime import timedelta
+
+from django.db.models import Sum
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 
 from rest_framework import status
-from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveUpdateDestroyAPIView, UpdateAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
@@ -11,11 +14,13 @@ from drf_yasg.utils import swagger_auto_schema
 from core.pagination import PagePagination
 from core.permissions import IsOwner
 from core.services.censor_service.censor_service import censor
+from core.services.currencies_service import CurrenciesService
 from core.services.email_service import EmailService
+from core.services.post_service import GetAvgPrice
 
 from apps.cars.models import CarModel
 from apps.cars.serializers import CarSerializers
-from apps.posts.models import UserPostsModel
+from apps.posts.models import UserPostsModel, VisitModel
 from apps.posts.serializers import UserPostSerializer, UserPostSerializerForBase
 from apps.users.models import UserModel
 
@@ -105,27 +110,73 @@ class PostRetriveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
             queryset = UserPostsModel.objects.filter(active_status=True)
         return queryset
 
-    def get(self, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
+        endpoint_name = self.request.path
+        today = timezone.now()
+        a_week_ago = today - timedelta(days=7)
+        a_month_ago = today - timedelta(days=30)
+        try:
+            visit = VisitModel.objects.get(endpoint=endpoint_name)
+            visit.count += 1
+            visit.save()
+        except VisitModel.DoesNotExist:
+            VisitModel.objects.create(endpoint=endpoint_name)
+        daily_visits = \
+            VisitModel.objects.filter(endpoint=endpoint_name, timestamp__gte=today.date()).aggregate(Sum('count'))[
+                'count__sum']
+        weekly_visits = \
+            VisitModel.objects.filter(endpoint=endpoint_name, timestamp__gte=a_week_ago.date()).aggregate(Sum('count'))[
+                'count__sum']
+        monthly_visits = \
+            VisitModel.objects.filter(endpoint=endpoint_name, timestamp__gte=a_month_ago.date()).aggregate(
+                Sum('count'))[
+                'count__sum']
+
         post = self.get_object()
+        posts_by_region = UserPostsModel.objects.filter(region=post.region)
+        posts_by_city = UserPostsModel.objects.filter(city=post.city)
+        posts_by_country = UserPostsModel.objects.filter(active_status=True)
+        avg_general_price = GetAvgPrice.get_avg_price(posts_by_country, post.car.car_brand)
+        avg_region_price = GetAvgPrice.get_avg_price(posts_by_region, post.car.car_brand)
+        avg_city_price = GetAvgPrice.get_avg_price(posts_by_city, post.car.car_brand)
+
+        response_data = {
+            'avg_prices': {
+                'general_avg_price': avg_general_price,
+                post.region: avg_region_price,
+                post.city: avg_city_price
+            },
+            'endpoint': endpoint_name,
+            'daily_visits': daily_visits if daily_visits else 0,
+            'weekly_visits': weekly_visits if weekly_visits else 0,
+            'monthly_visits': monthly_visits if monthly_visits else 0,
+        }
+
         post.views_count += 1
         post.save()
-        if self.request.user.account_status == 'base':
+        if str(self.request.user) == 'AnonymousUser' or self.request.user.account_status == 'base':
             serializer = UserPostSerializerForBase(post)
+            return Response(serializer.data, status.HTTP_200_OK)
         else:
             serializer = UserPostSerializer(post)
-        return Response(serializer.data, status.HTTP_200_OK)
+            return Response({'data': serializer.data, 'visits': response_data}, status.HTTP_200_OK)
 
-    def delete(self, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
         pk = kwargs['pk']
+        if not UserPostsModel.objects.filter(pk=pk).exists():
+            return Response(status.HTTP_204_NO_CONTENT)
         post = UserPostsModel.objects.get(pk=pk)
+        car = CarModel.objects.get(id=post.car.id)
         if not self.request.user.id == post.user_id and not self.request.user.is_staff:
             return Response('Forbidden', status.HTTP_403_FORBIDDEN)
         post.delete()
-        return Response('Post was deleted', status.HTTP_204_NO_CONTENT)
+        car.delete()
+        return Response('Post was deleted', status.HTTP_200_OK)
 
     def update(self, request, *args, **kwargs):
         pk = kwargs['pk']
-
+        if not UserPostsModel.objects.filter(pk=pk).exists():
+            return Response(status.HTTP_204_NO_CONTENT)
         post = UserPostsModel.objects.get(pk=pk)
         if not self.request.user.id == post.user_id and not self.request.user.is_staff:
             return Response('Forbidden', status.HTTP_403_FORBIDDEN)
@@ -135,6 +186,7 @@ class PostRetriveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
         car_serializer = CarSerializers(car, data=request.data['car'], partial=partial)
         car_serializer.is_valid(raise_exception=True)
         car_serializer.save()
+        CurrenciesService.update_price_by_id(car.id)
 
         serializer = self.get_serializer(post, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)

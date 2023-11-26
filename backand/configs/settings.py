@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     'django_filters',
     'rest_framework_simplejwt.token_blacklist',
     'drf_yasg',
+    'celery',
+    'django_celery_results',
+    'django_celery_beat',
 
     # my_apps
 
@@ -45,6 +48,7 @@ INSTALLED_APPS = [
     'apps.users',
     'apps.posts',
     'apps.cars',
+    'apps.currencies',
 ]
 
 MIDDLEWARE = [
@@ -109,11 +113,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Kyiv'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
