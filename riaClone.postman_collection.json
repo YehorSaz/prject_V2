@@ -115,14 +115,14 @@
 						"method": "POST",
 						"header": [],
 						"url": {
-							"raw": "{{host}}/auth/activate/",
+							"raw": "{{host}}/auth/activate/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWN0aXZhdGUiLCJleHAiOjE3MDEwMjQ2NDcsImlhdCI6MTcwMTAyMjg0NywianRpIjoiYjI0ZmE2Njg4NDg5NGIxMTgzMTlhYTdiOWQ1YTdhMWIiLCJ1c2VyX2lkIjoxfQ.EepRo2OA5VBj4vVjKvbCQrJ3Ql7WkUeFme8Lr6sgm6c",
 							"host": [
 								"{{host}}"
 							],
 							"path": [
 								"auth",
 								"activate",
-								""
+								"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWN0aXZhdGUiLCJleHAiOjE3MDEwMjQ2NDcsImlhdCI6MTcwMTAyMjg0NywianRpIjoiYjI0ZmE2Njg4NDg5NGIxMTgzMTlhYTdiOWQ1YTdhMWIiLCJ1c2VyX2lkIjoxfQ.EepRo2OA5VBj4vVjKvbCQrJ3Ql7WkUeFme8Lr6sgm6c"
 							]
 						}
 					},
@@ -435,6 +435,41 @@
 								{
 									"key": "id",
 									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delUser",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/users/:id/delete",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users",
+								":id",
+								"delete"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "4"
 								}
 							]
 						}
